@@ -9,17 +9,22 @@ toilet_status = {
     'toilet2': {'occupied': False, 'clean': False},
     'toilet3': {'occupied': False, 'clean': False},
 }
-
+cleaners = {}  # Dictionary to store cleaner information
 # Define a handler for the '/start' command
+
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
     chat_id = message.chat.id
-    welcome_message = "Welcome, Janitor! 🧹\n\n"
-    welcome_message += "Available commands:\n"
+    welcome_message = "Welcome to the Toilet Management Bot! 🧼🚽\n\n"
+    welcome_message += "Use the following commands:\n"
     welcome_message += "/check_toilets - Check toilets status\n"
     welcome_message += "/clean_toilet1 - Mark Toilet 1 as clean\n"
     welcome_message += "/occupy_toilet1 - Mark Toilet 1 as occupied\n"
     welcome_message += "/free_toilet1 - Mark Toilet 1 as free\n"
+    welcome_message += "/cleaner - Register as a cleaner\n"
+    welcome_message += "/status - Check your cleaning availability\n"
+    welcome_message += "/absent - Mark yourself as absent\n"
+    welcome_message += "/present - Mark yourself as present\n"
     bot.reply_to(message, welcome_message)
 
 # Command to check toilets status
@@ -56,7 +61,48 @@ def free_toilet1(message):
     toilet_status['toilet1']['occupied'] = False
     bot.reply_to(message, "Toilet 1 has been marked as free.")
 
-# Similarly, add handlers for managing Toilet 2 and Toilet 3
 
-# Start the bot
+
+@bot.message_handler(commands=['cleaner'])
+def cleaner_command(message):
+    user_id = message.from_user.id
+    if user_id not in cleaners:
+        cleaners[user_id] = {'available': True}  # New cleaner added by default as available
+        bot.reply_to(message, "You've been added as a cleaner.")
+    else:
+        bot.reply_to(message, "You are already registered as a cleaner.")
+
+
+@bot.message_handler(commands=['status'])
+def status_command(message):
+    user_id = message.from_user.id
+    if user_id in cleaners:
+        if cleaners[user_id]['available']:
+            bot.reply_to(message, "You are available for cleaning.")
+        else:
+            bot.reply_to(message, "You are currently unavailable for cleaning.")
+    else:
+        bot.reply_to(message, "You are not registered as a cleaner. Use /cleaner command to register.")
+
+
+@bot.message_handler(commands=['absent'])
+def absent_command(message):
+    user_id = message.from_user.id
+    if user_id in cleaners:
+        cleaners[user_id]['available'] = False
+        bot.reply_to(message, "You've been marked as absent.")
+    else:
+        bot.reply_to(message, "You are not registered as a cleaner. Use /cleaner command to register.")
+
+
+@bot.message_handler(commands=['present'])
+def present_command(message):
+    user_id = message.from_user.id
+    if user_id in cleaners:
+        cleaners[user_id]['available'] = True
+        bot.reply_to(message, "You've been marked as present and available for cleaning.")
+    else:
+        bot.reply_to(message, "You are not registered as a cleaner. Use /cleaner command to register.")
+
+
 bot.polling()

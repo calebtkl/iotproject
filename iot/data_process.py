@@ -1,20 +1,17 @@
 import os, time
-from influxdb_client_3 import InfluxDBClient3
+from influxdb_client_3 import InfluxDBClient3, Point
 import pandas
 
 
-token = os.environ.get("INFLUXDB_TOKEN")
-org = "temasek poly"
+token = "KXMpn2P9uje6hQ6MQFuumGz19EYsxcU2FLkSnyBb5q2hN_h5plIoQSFF1_9rbJKgatw6fcBoc7fLysZPbmfiiw=="
+org = "Temasek Polytechnic"
 host = "https://us-east-1-1.aws.cloud2.influxdata.com"
+database="Smart Washroom"
+
 client = InfluxDBClient3(host=host, token=token, org=org)
-bucket="bong"
-
-
-
-
 def query_influxdb():
    
-   query = 'from(bucket: "bong") |> range(start: -1h) |> filter(fn: (r) => r._measurement == "environmental_data")'
+   query = 'from(bucket: "Smart Washroom") |> range(start: -1h) |> filter(fn: (r) => r._measurement == "environmental_data")'
    pd = client.query(query=query, mode="pandas")
 # Print the pandas DataFrame formatted as a Markdown table.
    print(pd.to_markdown())
@@ -130,6 +127,7 @@ def impute_missing_values(cleaned_data):
 
 
 def main():
+   while True:
     influx_data = query_influxdb()
     if influx_data:
         cleaned_data = clean_zero_values(influx_data)
@@ -140,6 +138,6 @@ def main():
         # Further processing or analysis with the cleaned data
         for entry in cleaned_data:
             print(entry)  # Replace with your actual processing logic
-
-if _name_ == '_main_':
+    time.sleep(5)
+if __name__ == '__main__':
     main()
