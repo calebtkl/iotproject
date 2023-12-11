@@ -16,7 +16,80 @@ database = "Smart Washroom"
 # Create an InfluxDB client object
 client = influxdb_client.InfluxDBClient(url=url, token=token1, org=org)
 
-# ... (Define plot functions and other necessary functions)
+# Create an InfluxDB client object
+client = influxdb_client.InfluxDBClient(url=url, token=token1, org=org)
+
+# Function to plot scatter graph
+def plot_scatter_graph(df, x_var, y_var):
+    x = df[x_var]
+    y = df[y_var]
+
+    plt.figure(figsize=(8, 6))
+    plt.scatter(x, y, alpha=0.7)
+    plt.xlabel(x_var)
+    plt.ylabel(y_var)
+    plt.title(f'{y_var} vs {x_var}')
+    plt.grid(True)
+
+    buffer = BytesIO()
+    plt.savefig(buffer, format='png')
+    buffer.seek(0)
+    plt.close()
+
+    return buffer
+
+# Function to plot line graph
+def plot_line_graph(df, x_var, y_var):
+    x = df[x_var]
+    y = df[y_var]
+
+    plt.figure(figsize=(8, 6))
+    plt.plot(x, y)
+    plt.xlabel(x_var)
+    plt.ylabel(y_var)
+    plt.title(f'{y_var} over {x_var}')
+    plt.grid(True)
+
+    buffer = BytesIO()
+    plt.savefig(buffer, format='png')
+    buffer.seek(0)
+    plt.close()
+
+    return buffer
+
+# Function to plot graph
+def plot_graph(update, context, hours, graph_type):
+    query = f"""
+        from(bucket: "Smart Washroom")
+        |> range(start: -{hours}h)
+        |> filter(fn: (r) => r._measurement == "environmental_data" and (r.location == "location_A" or r.location == "location_B"))
+        |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")
+        |> sort(columns:["_time"], desc: true)
+    """
+    df = client.query_api().query_data_frame(org=org, query=query)
+
+    variable_names = context.user_data.get('variable_names', [])
+    if len(variable_names) < 2:
+        update.callback_query.reply_text("Please provide at least two variable header names.")
+        return
+
+    x_var, y_var = variable_names[:2]
+
+    if graph_type == 'scatter':
+        buffer = plot_scatter_graph(df, x_var, y_var)
+    elif graph_type == 'line':
+        buffer = plot_line_graph(df, x_var, y_var)
+    else:
+        update.message.reply_text("Invalid graph type selected.")
+        return
+
+    # Send the image to the Telegram chat
+    update.message.reply_photo(photo=buffer)
+
+# Command handler to start the bot
+def start(update, context):
+    update.message.reply_text("Welcome to the Graph Bot! Please /sethours to choose the hours.")
+
 
 # Handler to set hours
 def set_hours(update, context):
