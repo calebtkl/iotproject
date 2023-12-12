@@ -106,13 +106,14 @@ def calculate_cleanliness_score(row):
 
 def main():
     datas = queries()
+    print(datas)
     df = pd.DataFrame(datas)
     # Check if 'people_counter' column exists in the DataFrame
     if 'people_counter' in df.columns:
     # Access 'people_counter' column for the row labeled 'result'
      if 'result' in df.index:
         try:
-            value = df.loc['result', 'people_counter']
+            value = df.loc[ 'people_counter']
             # Process the 'people_counter' value
             print(value)  # or perform other operations
         except KeyError:
